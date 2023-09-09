@@ -3,7 +3,6 @@ from mimetypes import MimeTypes
 from fastapi import APIRouter, UploadFile, status, Response
 import time
 
-from config.drive import DriveAPI
 from config.db import conn
 from models.index import users, images
 from schemas.index import User, Image
@@ -22,9 +21,8 @@ async def login(user: User, response:Response):
         response.status_code = status.HTTP_204_NO_CONTENT
         return {'message':'No user account'}
     elif user_au.password == user.password:
-        return {'token': user_au.username+time.time(),
+        return {'token': user_au.username,
                 'user':{
-                    'email': user_au.email,
                     'name' : user_au.username
                 }
                 }
@@ -44,10 +42,13 @@ async def register(user: User, response: Response):
     if user_au is None:
         conn.execute(users.insert().values(
             username=user.username,
-            password=user.password,
-            email=user.email
+            password=user.password
         ))
-        return {'message':'Saved'}
+        return {'token': user.username,
+                'user':{
+                    'name' : user.username
+                }
+                }
     else:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {'message':'Already Exists'}
