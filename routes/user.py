@@ -1,13 +1,20 @@
+import os.path
+import shutil
 from mimetypes import MimeTypes
 from tokenize import String
+from typing import Annotated
 
-from fastapi import APIRouter, UploadFile, status, Response
+from fastapi import APIRouter, UploadFile, status, Response, File
 import time
 
 from config.db import conn
 from models.index import users, images
 from schemas.index import User, Image
+
+from pathlib import Path
 # import string
+
+import cv2
 user = APIRouter()
 
 # Login
@@ -60,14 +67,36 @@ async def uploadimage(file: UploadFile):
 
     # if(file.validate())
 
+    path = r'C:\Users\HP\PycharmProjects\New folder\images'
+    save_path = os.path.join(path,file.filename)
+
+    try:
+        file_object = await file.read()
+
+        with open(save_path,'wb') as buffer:
+            buffer.write(file_object)
+        await file.close()
+
+    except Exception as er:
+        print(er)
+
+
+    # path = r'C:\Users\HP\PycharmProjects\New folder\images'
+    # file_name = file.filename
+    # cv2.imwrite(os.path.join(path,filename), file.)
+    # cv2.waitKey(0)
+
+    # img = cv2.imread(file.file)
+    # cv2.imshow("Image",img)
+
+
     conn.execute(images.insert().values(
-        url=file.filename
+        url=save_path,
+        name=file.filename
     ))
-    # image = file.read(file.size)
-    # 
-    # obj = DriveAPI()
-    # obj.FileUpload(image,file.filename)
-    # obj.FileUpload()FileUpload(self=DriveAPI.FileUpload,image=image,name=file.filename)
+
+
+
     return {'filename':file.filename}
 
 @user.post("/classification")
@@ -121,3 +150,18 @@ def classify(url: str):
 #         password = user.password
 #     ))
 #     return conn.execute(users.select()).fetchall()
+
+# image = file.read(file.size)
+    #
+    # obj = DriveAPI()
+    # obj.FileUpload(image,file.filename)
+    # obj.FileUpload()FileUpload(self=DriveAPI.FileUpload,image=image,name=file.filename)
+
+# path: Path = r'C:\Users\HP\PycharmProjects\New folder\images'
+#
+# try:
+#     with path.open("wb") as buffer:
+#         shutil.copyfileobj(file.file, buffer)
+#         print("Saved")
+# finally:
+#     file.file.close()
