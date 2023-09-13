@@ -1,4 +1,5 @@
 from mimetypes import MimeTypes
+from tokenize import String
 
 from fastapi import APIRouter, UploadFile, status, Response
 import time
@@ -6,6 +7,7 @@ import time
 from config.db import conn
 from models.index import users, images
 from schemas.index import User, Image
+# import string
 user = APIRouter()
 
 # Login
@@ -37,7 +39,7 @@ async def register(user: User, response: Response):
         response.status_code = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
         return {'message':'No credentials'}
 
-    user_au: User = conn.execute(users.select().where(users.c.username == user.username)).fetchone();
+    user_au: User = conn.execute(users.select().where(users.c.username == user.username)).fetchone()
 
     if user_au is None:
         conn.execute(users.insert().values(
@@ -57,6 +59,7 @@ async def register(user: User, response: Response):
 async def uploadimage(file: UploadFile):
 
     # if(file.validate())
+
     conn.execute(images.insert().values(
         url=file.filename
     ))
@@ -66,6 +69,28 @@ async def uploadimage(file: UploadFile):
     # obj.FileUpload(image,file.filename)
     # obj.FileUpload()FileUpload(self=DriveAPI.FileUpload,image=image,name=file.filename)
     return {'filename':file.filename}
+
+@user.post("/classification")
+async def classify(imagename: str, response: Response):
+
+    if imagename is None:
+        response.status_code = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
+        return {'message': 'No credentials'}
+
+    image_fetched: Image = conn.execute(images.select().where(images.c.url == imagename)).fetchone()
+
+    if image_fetched is None:
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return {'message': 'No image'}
+
+    result = classify(image_fetched.url)
+
+    return {
+        'result':result
+    }
+def classify(url: str):
+    result = url
+    return (result)
 
 # pip install python-multipart
 # Login
