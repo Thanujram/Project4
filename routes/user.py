@@ -12,6 +12,7 @@ from models.index import users, images
 from schemas.index import User, Image
 from matplotlib import pyplot as plt
 from pathlib import Path
+from PIL import Image as pim
 # import string
 
 import cv2
@@ -71,6 +72,16 @@ async def uploadimage(file: UploadFile, response: Response):
     if(file.content_type == "image/jpeg" or file.content_type == "image/png"):
         path = r'C:\Users\HP\PycharmProjects\New folder\images'
         save_path = os.path.join(path, file.filename)
+
+        try:
+            veri_img = pim.open(file.file)
+            veri_img.verify()
+        except Exception as er:
+            print(er)
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {
+                'message': 'File is currupted'
+            }
 
         try:
             file_object = await file.read()
