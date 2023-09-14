@@ -67,10 +67,10 @@ async def register(user: User, response: Response):
 @user.post("/upload")
 async def uploadimage(file: UploadFile, response: Response):
 
-
+    print(file.content_type);
     #image/bmp, image/jpeg, image/x-png; image/png, or image/gif
-    if(file.content_type == "image/jpeg" or file.content_type == "image/png"):
-        path = r'C:\Users\HP\PycharmProjects\New folder\images'
+    if(file.content_type == "image/jpg" or file.content_type == "image/jpeg" or file.content_type == "image/png"):
+        path = r'C:\Users\jasit\Desktop\Project4\New folder'
         save_path = os.path.join(path, file.filename)
 
         try:
@@ -106,7 +106,7 @@ async def uploadimage(file: UploadFile, response: Response):
         }
 
 
-@user.post("/classification")
+@user.get("/classification")
 async def classify(filename: str, response: Response):
 
     if filename is None:
@@ -136,7 +136,9 @@ def classify(url: str):
     # result = predict(img)
 
     # Value for URL temp
-    result = url
+    result = {
+        'result': url
+    }
 
     return (result)
 
