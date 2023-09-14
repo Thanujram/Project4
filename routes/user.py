@@ -10,11 +10,12 @@ import time
 from config.db import conn
 from models.index import users, images
 from schemas.index import User, Image
-
+from matplotlib import pyplot as plt
 from pathlib import Path
 # import string
 
 import cv2
+# import mat as plt
 user = APIRouter()
 
 # Login
@@ -63,50 +64,45 @@ async def register(user: User, response: Response):
         return {'message':'Already Exists'}
 
 @user.post("/upload")
-async def uploadimage(file: UploadFile):
-
-    # if(file.validate())
-
-    path = r'C:\Users\HP\PycharmProjects\New folder\images'
-    save_path = os.path.join(path,file.filename)
-
-    try:
-        file_object = await file.read()
-
-        with open(save_path,'wb') as buffer:
-            buffer.write(file_object)
-        await file.close()
-
-    except Exception as er:
-        print(er)
+async def uploadimage(file: UploadFile, response: Response):
 
 
-    # path = r'C:\Users\HP\PycharmProjects\New folder\images'
-    # file_name = file.filename
-    # cv2.imwrite(os.path.join(path,filename), file.)
-    # cv2.waitKey(0)
+    #image/bmp, image/jpeg, image/x-png; image/png, or image/gif
+    if(file.content_type == "image/jpeg" or file.content_type == "image/png"):
+        path = r'C:\Users\HP\PycharmProjects\New folder\images'
+        save_path = os.path.join(path, file.filename)
 
-    # img = cv2.imread(file.file)
-    # cv2.imshow("Image",img)
+        try:
+            file_object = await file.read()
 
+            with open(save_path, 'wb') as buffer:
+                buffer.write(file_object)
+            await file.close()
 
-    conn.execute(images.insert().values(
-        url=save_path,
-        name=file.filename
-    ))
+        except Exception as er:
+            print(er)
 
+        conn.execute(images.insert().values(
+            url=save_path,
+            name=file.filename
+        ))
+        return {'filename': file.filename}
 
+    else:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {
+            'message': 'File type not supporting'
+        }
 
-    return {'filename':file.filename}
 
 @user.post("/classification")
-async def classify(imagename: str, response: Response):
+async def classify(filename: str, response: Response):
 
-    if imagename is None:
+    if filename is None:
         response.status_code = status.HTTP_203_NON_AUTHORITATIVE_INFORMATION
-        return {'message': 'No credentials'}
+        return {'message': 'NO URL'}
 
-    image_fetched: Image = conn.execute(images.select().where(images.c.url == imagename)).fetchone()
+    image_fetched: Image = conn.execute(images.select().where(images.c.name == filename)).fetchone()
 
     if image_fetched is None:
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -114,54 +110,22 @@ async def classify(imagename: str, response: Response):
 
     result = classify(image_fetched.url)
 
-    return {
-        'result':result
-    }
+    return result
+
+# Function for classifing
 def classify(url: str):
+
+    img = cv2.imread(url)
+
+    # To check the image loading
+    # plt.imshow(img)
+    # plt.show()
+
+    # Model trained should be loaded here
+    # result = predict(img)
+
+    # Value for URL temp
     result = url
+
     return (result)
 
-# pip install python-multipart
-# Login
-# @user.get("/login/{username}/{password}")
-# async def login(username: str, password: str):
-#     user_au: User
-#     user_au = conn.execute(users.select().where(users.c.username == username)).fetchone();
-#     if user_au.password == password:
-#         return {'Auth': 'Grant'}
-#     else:
-#         return {'Auth':'NO'}
-# @user.get("/")
-# async def read_data():
-#     return conn.execute(users.select()).fetchall()
-#
-# @user.get("/{id}")
-# async def read_data(id: int):
-#     return conn.execute(users.select().where(users.c.id == id)).fetchall()
-#
-# @user.post("/register/{username}/{password}")
-# async def register(username: str, password: str):
-#
-#
-# @user.post("/")
-# async def write_data(user: User):
-#     conn.execute(users.insert().values(
-#         username = user.username,
-#         password = user.password
-#     ))
-#     return conn.execute(users.select()).fetchall()
-
-# image = file.read(file.size)
-    #
-    # obj = DriveAPI()
-    # obj.FileUpload(image,file.filename)
-    # obj.FileUpload()FileUpload(self=DriveAPI.FileUpload,image=image,name=file.filename)
-
-# path: Path = r'C:\Users\HP\PycharmProjects\New folder\images'
-#
-# try:
-#     with path.open("wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-#         print("Saved")
-# finally:
-#     file.file.close()
